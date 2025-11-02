@@ -1,80 +1,85 @@
-# 
-
-
-# 🧠 CIMT Segmentation — Pure Python Run Guide
-
-This repository implements **10 U-Net-based architectures** for **Carotid Intima-Media Thickness (CIMT)** ultrasound segmentation using **only Python**, with no Conda or additional setup tools required.
+# CIMT Segmentation with U-Net Variants  
+*(⚠ This implementation does not perfectly match the parameters reported in the original paper. It is a functional and optimized version for practical experimentation.)*
 
 ---
 
-## 📂 Folder Structure
+## 📘 Overview
+This repository provides a **complete Python-only pipeline** for Carotid Intima–Media Thickness (CIMT) ultrasound segmentation using **10 U-Net variants**, including:
+- U-Net  
+- U-Net++  
+- ResU-Net  
+- Attention U-Net  
+- Attention ResU-Net  
+- SE-U-Net  
+- DenseU-Net  
+- Inception U-Net  
+- TransUNet  
+- UNeXt  
 
-```
-cimtseg_models_v4/
- ├─ models/               # All U-Net variants
- ├─ utils/                # Metrics, visualization, logger
- ├─ dataset.py            # Dataset loader
- ├─ train.py              # Model training script
- ├─ preprocess_full.py    # Data preprocessing pipeline
- ├─ visualize.py          # Visualization functions
- ├─ visual_test.py        # Visualization test runner
- ├─ results/              # Trained weights and logs
- └─ CUBS/                 # Dataset folder (after preprocessing)
-```
+The project covers:
+- Dataset preprocessing (mask generation, CLAHE, verification, splitting)
+- Model training and evaluation
+- Automatic logging and visualization
+- Lightweight visualization pipeline for GT–Prediction–Overlay images
 
 ---
 
-## ⚙️ 1. Install Requirements
-
-Make sure Python ≥ 3.10 is installed.
-
-Install the required packages directly with `pip`:
+## ⚙️ Requirements
+Python ≥ 3.9  
+Recommended environment: **conda**
 
 ```bash
-pip install torch torchvision torchaudio
-pip install opencv-python albumentations pillow tqdm numpy pandas matplotlib scikit-learn
+conda create -n cimt python=3.10
+conda activate cimt
+pip install -r requirements.txt
 ```
 
-No virtual environment is required — these are standard PyPI packages only.
+> (If `requirements.txt` is missing, install core libs manually)
+> ```bash
+> pip install torch torchvision albumentations opencv-python pillow tqdm scikit-learn matplotlib
+> ```
 
 ---
-📦 Dataset: CUBS (Carotid Ultrasound B-mode Segmentation)
 
-This project uses the CUBS dataset published on Mendeley Data
-.
+## 📦 Dataset: CUBS (Carotid Ultrasound B-mode Segmentation)
 
-🔗 Download Instructions
+This project uses the **CUBS dataset** from Mendeley Data:  
+🔗 [https://data.mendeley.com/datasets/fpv535fss7/1](https://data.mendeley.com/datasets/fpv535fss7/1)
 
-Go to the dataset page:
-👉 https://data.mendeley.com/datasets/fpv535fss7/1
+### 🔽 Download Instructions
+1. Visit the dataset page above.  
+2. Click **“Download All Files”** on the right-hand side.  
+3. Extract the downloaded archive, for example:
+   ```
+   C:\Users\<username>\Desktop\CUBS
+   ```
+4. After extraction, ensure the folder structure looks like:
+   ```
+   CUBS/
+   ├── IMAGES/
+   │   ├── *.tif / *.tiff (ultrasound images)
+   ├── SEGMENTATIONS/
+   │   ├── Manual-A1/
+   │   │   ├── *-LI.txt
+   │   │   ├── *-MA.txt
+   ```
 
-Click the "Download All Files" button on the right side.
-This will download a .zip file (≈ several hundred MB).
+---
 
-Extract the archive anywhere, for example:
+## 🧰 Preprocessing (Mask + CLAHE + Split)
 
-C:\Users\<username>\Desktop\CUBS
+Run the following command to automatically:
+- Generate segmentation masks from LI/MA boundaries  
+- Apply CLAHE and normalize the dataset  
+- Verify image-mask pairs  
+- Split into **train/val/test (6:2:2)**
 
-
-The extracted folder should contain:
-
-CUBS/
-├── IMAGES/
-│   ├── *.tif / *.tiff (ultrasound images)
-├── SEGMENTATIONS/
-│   ├── Manual-A1/
-│   │   ├── *-LI.txt
-│   │   ├── *-MA.txt
-
-🧰 Preprocessing Before Training
-
-Run the preprocessing script to generate masks, standardize images (CLAHE), verify data, and split into train/val/test:
-
+```bash
 python preprocess_full.py --base_dir "C:\Users\<username>\Desktop\CUBS" --annotator "Manual-A1"
+```
 
-
-This will automatically create:
-
+This creates a standardized dataset:
+```
 CUBS/
 └── data_std/
     ├── images/
@@ -82,178 +87,99 @@ CUBS/
     ├── train/
     ├── val/
     ├── test/
-## 🧮 2. Dataset Preprocessing
-
-Place your dataset in the following structure:
-
-```
-CUBS/
- ├─ IMAGES/
- └─ SEGMENTATIONS/Manual-A1/
-```
-
-Run the preprocessing pipeline:
-
-```bash
-python preprocess_full.py --base_dir CUBS --annotator Manual-A1
-```
-
-This will automatically:
-
-1. Generate mask PNGs from LI/MA boundary text files  
-2. Apply CLAHE (contrast enhancement)  
-3. Verify image–mask shape consistency  
-4. Split into `train`, `val`, and `test` subsets (6 : 2 : 2)
-
-Output structure:
-
-```
-CUBS/data_std/
- ├─ train/
- ├─ val/
- ├─ test/
- └─ split_summary.json
 ```
 
 ---
 
-## 🚀 3. Train Models
+## 🧠 Model Training
 
-Run training interactively from the command line:
-
+Start the unified training script:
 ```bash
 python train.py
 ```
 
-Example prompt:
+You’ll be prompted to:
+- Select which models to train (`1-10` or comma-separated list)
+- Specify training epochs
 
+Example:
 ```
-==============================
- CIMT Segmentation Training
-==============================
-
-Select models to train:
-1. unet
-2. unetpp
-3. resunet
-4. attention_unet
-5. attention_resunet
-6. seunet
-7. denseunet
-8. inceptionunet
-9. transunet
-10. unext
-
-💡 Example:
- - Comma separated: 1,4,9
- - Range selection: 1-10 (means all models)
-
 Enter model indices: 1-10
-Enter number of epochs (default=100): 2
+Enter number of epochs (default=100): 50
 ```
 
-Training results are saved to:
-
-```
-results/
- ├─ [model_name]/best_model.pth
- ├─ [model_name]/final_model.pt
- ├─ [model_name]/train_log.csv
- └─ summary.csv
-```
+Each model will:
+- Train automatically on GPU (if available)
+- Save `best_model.pth` and `final_model.pt` to the project root
+- Log metrics (Loss, Dice, IoU) per epoch
 
 ---
 
-## 🎨 4. Visualization
+## 🎨 Visualization (GT–Prediction–Overlay)
 
-After training, visualize model predictions and overlays:
+After training, you can visualize sample predictions using:
 
 ```bash
 python visual_test.py
 ```
 
-The script loads the trained model and saves visualization triplets (`Input`, `Ground Truth`, `Prediction`) under:
-
+This will create a folder like:
 ```
-results/vis_[model_name]/
+results/
+└── vis_attention_unet/
+    ├── sample_000_triplet.png
+    ├── sample_001_triplet.png
+    └── ...
 ```
 
-Each output shows:
-- Left → original ultrasound image  
-- Middle → ground-truth segmentation  
-- Right → predicted overlay
+Each visual shows:
+1. **Ground Truth (GT)**  
+2. **Predicted Mask**  
+3. **Overlay (Image + Prediction)**
 
 ---
 
-## 🧾 5. Independent Script Usage
-
-| Task | Command |
-|------|----------|
-| Run preprocessing only | `python preprocess_full.py --base_dir CUBS` |
-| Train one or multiple models | `python train.py` |
-| Generate visualization outputs | `python visual_test.py` |
-
-All scripts are fully self-contained; no external configs or notebooks are required.
-
----
-
-## 🧠 Models Implemented
-
-| Type | Model | Description |
-|------|--------|-------------|
-| Base | **U-Net** | Standard encoder–decoder |
-| Nested | **U-Net++** | Dense skip connections |
-| Residual | **ResU-Net** | Residual convolution blocks |
-| Attention | **Attention U-Net** | Spatial attention in skip paths |
-| Hybrid | **Attention ResU-Net** | Residual + attention mechanism |
-| Squeeze | **SE-U-Net** | Channel attention (Squeeze-Excitation) |
-| Dense | **DenseU-Net** | Dense connections per block |
-| Inception | **Inception U-Net** | Multi-scale inception features |
-| Transformer | **TransU-Net** | CNN + Transformer encoder |
-| Lightweight | **UNeXt** | Efficient MLP-based segmentation |
+## 🗂 Folder Structure
+```
+cimtseg_models_v4/
+│
+├─ models/              ← all U-Net variants
+│
+├─ utils/
+│   ├─ metrics.py
+│   ├─ visualize.py
+│   ├─ logger.py
+│   └─ __init__.py
+│
+├─ dataset.py           ← dataset loader
+├─ train.py             ← main training script
+├─ preprocess_full.py   ← dataset preprocessing pipeline
+├─ visual_test.py       ← visual result generation
+├─ README.md
+└─ requirements.txt
+```
 
 ---
 
-## 📊 Evaluation Metrics
-
-Each epoch logs the following:
-
-- Binary Cross-Entropy (BCE) + Dice hybrid loss  
-- Dice Coefficient  
-- Intersection over Union (IoU)  
-- Precision / Recall  
-- Accuracy  
-- Runtime per epoch and inference time
-
-All values are recorded in `train_log.csv` and summarized in `results/summary.csv`.
+## 📋 Notes
+- The parameter counts are adjusted for GPU efficiency (not exactly identical to original papers).  
+- The code automatically detects GPU via `torch.cuda.is_available()`.  
+- All logs and model checkpoints are saved in the project root.  
 
 ---
 
-## 💡 Notes
+## 📜 Citation
+If you use this implementation or part of it, please cite the original **CUBS dataset**:
 
-- To adjust dataset path, edit `DATA_ROOT` in **train.py**:  
-  ```python
-  DATA_ROOT = Path("CUBS/data_std")
-  ```
-- To reduce memory usage:  
-  ```python
-  BATCH_SIZE = 4
-  ```
-- All `.pth` files are standard PyTorch checkpoints, compatible with both CPU and GPU.
+> Carotid ultrasound B-mode images for segmentation and analysis (CUBS dataset),  
+> Mendeley Data, V1, DOI: [10.17632/fpv535fss7.1](https://doi.org/10.17632/fpv535fss7.1)
 
 ---
 
-## 🏁 Quick Command Summary
-
-| Step | Command | Description |
-|------|----------|-------------|
-| 1️⃣ Preprocess | `python preprocess_full.py --base_dir CUBS` | Prepare dataset |
-| 2️⃣ Train | `python train.py` | Train selected models |
-| 3️⃣ Visualize | `python visual_test.py` | Save overlay results |
+## ✍️ Author
+Developed by **Jeong Seung Ju (KMOU, Dept. of AI Engineering)**  
+For research on CIMT segmentation using U-Net variants.
 
 ---
 
-## 🧾 License
-
-Released under the **MIT License**.  
-Use freely for research, education, and development.
+✅ *This project is a clean, self-contained Python-only implementation ready for GitHub release.*
