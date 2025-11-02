@@ -1,3 +1,6 @@
+# 
+
+
 # 🧠 CIMT Segmentation — Pure Python Run Guide
 
 This repository implements **10 U-Net-based architectures** for **Carotid Intima-Media Thickness (CIMT)** ultrasound segmentation using **only Python**, with no Conda or additional setup tools required.
@@ -35,7 +38,50 @@ pip install opencv-python albumentations pillow tqdm numpy pandas matplotlib sci
 No virtual environment is required — these are standard PyPI packages only.
 
 ---
+📦 Dataset: CUBS (Carotid Ultrasound B-mode Segmentation)
 
+This project uses the CUBS dataset published on Mendeley Data
+.
+
+🔗 Download Instructions
+
+Go to the dataset page:
+👉 https://data.mendeley.com/datasets/fpv535fss7/1
+
+Click the "Download All Files" button on the right side.
+This will download a .zip file (≈ several hundred MB).
+
+Extract the archive anywhere, for example:
+
+C:\Users\<username>\Desktop\CUBS
+
+
+The extracted folder should contain:
+
+CUBS/
+├── IMAGES/
+│   ├── *.tif / *.tiff (ultrasound images)
+├── SEGMENTATIONS/
+│   ├── Manual-A1/
+│   │   ├── *-LI.txt
+│   │   ├── *-MA.txt
+
+🧰 Preprocessing Before Training
+
+Run the preprocessing script to generate masks, standardize images (CLAHE), verify data, and split into train/val/test:
+
+python preprocess_full.py --base_dir "C:\Users\<username>\Desktop\CUBS" --annotator "Manual-A1"
+
+
+This will automatically create:
+
+CUBS/
+└── data_std/
+    ├── images/
+    ├── masks/
+    ├── train/
+    ├── val/
+    ├── test/
 ## 🧮 2. Dataset Preprocessing
 
 Place your dataset in the following structure:
